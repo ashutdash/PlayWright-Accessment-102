@@ -1,0 +1,52 @@
+version: "0.1"
+
+globalTimeout: 90
+testSuiteTimeout: 90
+testSuiteStep: 90
+
+runson: win
+
+shell: powershell
+
+env:
+  LT_USERNAME: ${{.secrets.LT_USERNAME}}
+  LT_ACCESS_KEY: ${{.secrets.LT_ACCESS_KEY}}
+
+autosplit: true
+
+retryOnFailure: false
+maxRetries: 1
+
+concurrency: 2
+
+pre:
+  - npm ci
+  - npx playwright install
+
+cacheKey: '{{ checksum "package-lock.json" }}'
+cacheDirectories:
+  - node_modules
+
+testDiscovery:
+  type: raw
+  mode: remote
+  command: |-
+    Write-Output "tests/input-form.spec.ts"
+    Write-Output "tests/simple-form.spec.ts"
+    Write-Output "tests/slider.spec.ts"
+
+testRunnerCommand: npx playwright test "$test"
+
+jobLabel: [playwright-101, windows, autosplit]
+
+report: true
+
+partialReports:
+  location: playwright-report
+  type: html
+
+uploadArtefacts:
+  - name: Playwright artifacts
+    path:
+      - playwright-report/**
+      - test-results/**
